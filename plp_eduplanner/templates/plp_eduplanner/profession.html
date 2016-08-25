@@ -1,0 +1,40 @@
+{% extends "plp_eduplanner/base.html" %}
+{% block content %}
+    <h3>{{ profession.title }}</h3>
+    <hr/>
+
+    {{ profession.description|safe }}
+    <hr/>
+
+    <div class="well">
+        Более {{ total_companies }} подходящих компаний
+        {% for company in companies %}
+            {# Пока не известно какие такие компании, но скорее всего вид у них будет такой #}
+            {% if company.logo %}
+                <img src="{{ company.logo.url }}" alt="{{ company.name }}"/>
+            {% endif %}
+            {# todo ссылка #}
+            {{ company.name }}
+        {% endfor %}
+    </div>
+    <hr/>
+
+    <div class="row">
+        <did class="col-lg-6">
+
+            Чтобы получить профессию, вам нужно:
+        </did>
+        <div class="col-lg-6">
+            Зарплата Junior Data Scientist
+        </div>
+    </div>
+    <hr/>
+    <a href="{# todo start link #}" class="btn btn-block btn-primary">Начать обучение</a>
+
+    <hr/>
+    <div class="row">
+        {% for objective in objectives %}
+            <div class="col-sm-5"><p>{{ objective.text }}</p></div>
+        {% endfor %}
+    </div>
+{% endblock %}
