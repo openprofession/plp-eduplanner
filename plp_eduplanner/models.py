@@ -7,7 +7,7 @@ from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext_lazy as _
 
 
-class Competition(MPTTModel):
+class Competence(MPTTModel):
     title = models.CharField(max_length=200, unique=True, verbose_name=_('Название'))
     annotation = models.CharField(max_length=200, verbose_name=_('Аннотация'))
     is_public = models.BooleanField(default=True, db_index=True, verbose_name=_('Публичный'))
@@ -23,7 +23,7 @@ class Competition(MPTTModel):
 
 
 class AbstractRateBasedRelation(models.Model):
-    comp = models.ForeignKey(Competition, verbose_name=_('Компетенция'))
+    comp = models.ForeignKey(Competence, verbose_name=_('Компетенция'))
     rate = models.SmallIntegerField(default=1, validators=validators.RATE_VALIDATORS, verbose_name=_('Значение'))
 
     class Meta:

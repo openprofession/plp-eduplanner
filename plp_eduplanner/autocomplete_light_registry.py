@@ -2,7 +2,7 @@ import autocomplete_light.shortcuts as al
 from plp_eduplanner import models
 
 #TODO permissions check
-al.register(models.Competition,
+al.register(models.Competence,
             search_fields=['^title'],
             attrs={
                 'data-autocomplete-minimum-characters': 1,

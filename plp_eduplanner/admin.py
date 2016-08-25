@@ -8,17 +8,17 @@ from django.utils.translation import ugettext_lazy as _
 import autocomplete_light
 
 
-class CompetitionLeafNodes(forms.ModelForm):
-    comp = autocomplete_light.ModelChoiceField('CompetitionAutocomplete', label=_('Компетенция'))
+class CompetenceLeafNodes(forms.ModelForm):
+    comp = autocomplete_light.ModelChoiceField('CompetenceAutocomplete', label=_('Компетенция'))
 
 
-class UserCompAdminForm(CompetitionLeafNodes):
+class UserCompAdminForm(CompetenceLeafNodes):
     user = autocomplete_light.ModelChoiceField('UserAutocomplete', label=_('Пользователь'))
 
 
 class ProfessionCompInline(admin.TabularInline):
     model = models.ProfessionComp
-    form = CompetitionLeafNodes
+    form = CompetenceLeafNodes
 
 
 @admin.register(models.Profession)
@@ -29,8 +29,8 @@ class ProfessionAdmin(admin.ModelAdmin):
     list_filter = ['is_public']
 
 
-@admin.register(models.Competition)
-class CompetitionAdmin(MPTTModelAdmin):
+@admin.register(models.Competence)
+class CompetenceAdmin(MPTTModelAdmin):
     list_display = ['title', 'annotation', 'is_public']
     list_filter = ['is_public']
     search_fields = ['title', 'annotation']
@@ -47,4 +47,4 @@ class UserCompAdmin(admin.ModelAdmin):
 class CourseCompAdmin(admin.ModelAdmin):
     list_select_related = ['course', 'comp']
     list_display = ['course', 'comp', 'rate']
-    form = CompetitionLeafNodes
+    form = CompetenceLeafNodes
