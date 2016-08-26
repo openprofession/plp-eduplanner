@@ -21,13 +21,10 @@ class ProfessionCompInline(admin.TabularInline):
     form = CompetenceLeafNodes
 
 
-class ProfessionObjectiveInline(admin.StackedInline):
-    model = models.ProfessionObjective
-
 
 @admin.register(models.Profession)
 class ProfessionAdmin(admin.ModelAdmin):
-    inlines = [ProfessionCompInline, ProfessionObjectiveInline]
+    inlines = [ProfessionCompInline]
     list_display = ['title', 'is_public']
     search_fields = ['title', 'description']
     list_filter = ['is_public']

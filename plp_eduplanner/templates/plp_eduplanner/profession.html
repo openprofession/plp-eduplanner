@@ -1,23 +1,19 @@
 {% extends "plp_eduplanner/base.html" %}
+{% load mptt_tags %}
 {% block content %}
     <h3>{{ profession.title }}</h3>
+    <h5>{{ profession.sub_title }}</h5>
     <hr/>
 
-    {{ profession.description|safe }}
+    {% block html %}
+        {{ profession.description|safe }}
+        {{ project.objectives_html|safe }}
+        {{ project.companies_html|safe }}
+        {{ project.directions_html|safe }}
+    {% endblock %}
     <hr/>
 
-    <div class="well">
-        Более {{ total_companies }} подходящих компаний
-        {% for company in companies %}
-            {# Пока не известно какие такие компании, но скорее всего вид у них будет такой #}
-            {% if company.logo %}
-                <img src="{{ company.logo.url }}" alt="{{ company.name }}"/>
-            {% endif %}
-            {# todo ссылка #}
-            {{ company.name }}
-        {% endfor %}
-    </div>
-    <hr/>
+
 
     <div class="row">
         <did class="col-lg-6">
@@ -33,8 +29,35 @@
 
     <hr/>
     <div class="row">
-        {% for objective in objectives %}
-            <div class="col-sm-5"><p>{{ objective.text }}</p></div>
+        <div class="col-sm-6">
+            <ul class="root">
+                {% recursetree tree %}
+                    <li>
+                        {{ node.title }}
+
+                        {% if not node.is_leaf_node %}
+                            <ul class="children">
+                                {{ children }}
+                            </ul>
+                        {% endif %}
+                    </li>
+                {% endrecursetree %}
+            </ul>
+        </div>
+        <div class="col-sm-6">
+            <ul>
+                {% for leaf_node in leaf_nodes %}
+                    <li class="{% if leaf_node.pk in leaf_nodes_only_prof %}text-success{% endif %}">{{ leaf_node }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <hr/>
+    <div class="row">
+        {% for other_profession in other_professions %}
+            <div class="col-sm6">
+                <h5>{{ other_profession.title }} </h5>
+            </div>
         {% endfor %}
     </div>
 {% endblock %}
