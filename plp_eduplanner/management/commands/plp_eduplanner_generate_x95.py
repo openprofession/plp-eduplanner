@@ -5,7 +5,6 @@ from random import randint, choice
 
 from django.core.management import BaseCommand
 from plp_eduplanner import models
-from plp.models import Course
 
 
 class Command(BaseCommand):
@@ -30,7 +29,6 @@ class Command(BaseCommand):
 
     def _gen_comp(self, lvl, mn=1, mx=100):
         parents = models.Competence.objects.filter(level=lvl - 1)
-        objs = []
         for x in xrange(randint(mn, mx)):
             parent = choice(parents)
             title = '%s.%d' % (parent.title, x)
