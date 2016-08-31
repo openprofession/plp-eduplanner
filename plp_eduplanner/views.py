@@ -59,7 +59,7 @@ class ProfessionPlan(ProfessionCompetenciesTree, generic.DetailView):
 
         expected_courses = sorted(models.Profession.get_expected_courses(required), key=lambda x: len(required_set - set([x.comp_id for x in x.competencies.all()])), reverse=False)
 
-        plan = models.Competence.get_plan(expected_courses, required)
+        plan = models.Competence.get_plan(expected_courses, required.copy())
         return JsonResponse(
             {
                 'courses': [
