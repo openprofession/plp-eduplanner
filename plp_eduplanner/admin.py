@@ -21,7 +21,6 @@ class ProfessionCompInline(admin.TabularInline):
     form = CompetenceLeafNodes
 
 
-
 @admin.register(models.Profession)
 class ProfessionAdmin(admin.ModelAdmin):
     inlines = [ProfessionCompInline]
@@ -49,3 +48,4 @@ class CourseCompAdmin(admin.ModelAdmin):
     list_select_related = ['course', 'comp']
     list_display = ['course', 'comp', 'rate']
     form = CompetenceLeafNodes
+    search_fields = ['course__slug']
