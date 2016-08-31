@@ -10,7 +10,7 @@
     ./manage.py migrate
 
 #### Urls
-    url('eduplanner/', include('plp_eduplanner.urls', namespace='plp_eduplanner')) добавить в urls.py
+    url('', include('plp_eduplanner.urls', namespace='plp_eduplanner')) добавить в urls.py
 
 
 
