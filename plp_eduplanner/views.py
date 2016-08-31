@@ -13,7 +13,8 @@ class ProfessionCompetenciesTree(object):
         leaf_nodes_only_prof = [x.comp_id for x in related]
         sub_parents_ids = models.Competence.objects.filter(pk__in=[x.comp.parent_id for x in related])  # ID компетеций 2 уровня
         leaf_nodes = models.Competence.objects.filter(parent_id__in=sub_parents_ids)  # Все-все компетенции для компетенций 2 уровня для этой проф.
-        ret = {}
+
+        ret = dict()
         ret['related'] = related
         ret['tree'] = models.Competence.objects.get_queryset_ancestors(sub_parents_ids, include_self=True)  # Получение дерева
         ret['leaf_nodes'] = sorted(leaf_nodes, key=lambda x: x.pk not in leaf_nodes_only_prof)  # Сначала выводим попадающие под тек. проф.
@@ -23,6 +24,9 @@ class ProfessionCompetenciesTree(object):
 
 
 class Profession(ProfessionCompetenciesTree, generic.DetailView):
+    """
+    Страница профессии
+    """
     template_name = 'plp_eduplanner/profession.html'
     queryset = models.Profession.objects.filter(is_public=True)
     context_object_name = 'profession'
@@ -34,11 +38,13 @@ class Profession(ProfessionCompetenciesTree, generic.DetailView):
         # TODO подразумевается какая-либо логика?
         cd['other_professions'] = models.Profession.objects.filter(~Q(pk=self.object.pk), is_public=True)[:2]
 
-        # print len(connection.queries) # print course???
         return cd
 
 
 class Professions(generic.ListView):
+    """
+    Актуально только для dev
+    """
     template_name = 'plp_eduplanner/professions.html'
     queryset = models.Profession.objects.filter(is_public=True)
     context_object_name = 'professions'
@@ -46,10 +52,23 @@ class Professions(generic.ListView):
 
 
 class ProfessionPlan(ProfessionCompetenciesTree, generic.DetailView):
+    """
+    Получить план для изучения професии
+    """
     queryset = models.Profession.objects.filter(is_public=True)
     context_object_name = 'profession'
 
     def get(self, *args, **kwargs):
+        """
+
+        Returns:
+            JsonResponse: Данные о курсах и компетенциях требуемых для изучения указанной профессии
+            {
+                courses: Ответ формируется в edu_planner_response основного модуля у класса Course
+                competencies: [[competence_id,rate],[competence_id,rate]]
+            }
+
+        """
         obj = self.get_object(self.queryset)
         cd = self.get_tree(obj)
         prof_comps = {x.comp_id: x.rate for x in cd['related']}
