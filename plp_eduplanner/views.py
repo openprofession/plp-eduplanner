@@ -63,7 +63,7 @@ class ProfessionPlan(ProfessionCompetenciesTree, generic.DetailView):
         return JsonResponse(
             {
                 'courses': [
-                    {'title': getattr(course, 'edu_planner_response', {'errod': 'Create edu_planner_response property in course class'})} for course, ttl in plan],
+                    getattr(course, 'edu_planner_response', {'err': 'Create edu_planner_response property in course class'}) for course, ttl in plan],
                 'competencies': [(x, y) for x, y in required.items()]
             }
         )
