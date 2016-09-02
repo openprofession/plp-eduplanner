@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import time
 from django.db.models import Q
 from django.http import JsonResponse
 from django.views import generic
@@ -58,6 +59,15 @@ class ProfessionPlan(ProfessionCompetenciesTree, generic.DetailView):
     queryset = models.Profession.objects.filter(is_public=True)
     context_object_name = 'profession'
 
+    def _course_response(self, course):
+        data = {}
+        data['title'] = str(course)
+
+        session = course.next_session
+        data['price'] = session.price if session else None
+        data['datetime_starts'] = time.mktime(session.datetime_starts.timetuple()) if session else None
+        return data
+
     def get(self, *args, **kwargs):
         """
 
@@ -81,8 +91,7 @@ class ProfessionPlan(ProfessionCompetenciesTree, generic.DetailView):
         plan = models.Competence.get_plan(expected_courses, required.copy())
         return JsonResponse(
             {
-                'courses': [
-                    getattr(course, 'edu_planner_response', {'err': 'Create edu_planner_response property in course class'}) for course, ttl in plan],
+                'courses': {course.pk: self._course_response(course) for course, ttl in plan},
                 'competencies': [(x, y) for x, y in required.items()]
             }
         )
