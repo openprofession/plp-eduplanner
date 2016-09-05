@@ -90,13 +90,35 @@ class Profession(models.Model):
     objectives_html = models.TextField(blank=True, verbose_name=_('HTML код блока задач'))
     directions_html = models.TextField(blank=True, verbose_name=_('HTML код блока направлений'))
 
+    def competencies_tree(self):
+        related = self.competencies.all().select_related('comp__parent')[:100]  # Все компетенции последнего уровня для тек. проф
+        leaf_nodes_only_prof = [x.comp_id for x in related]
+        sub_parents_ids = Competence.objects.filter(pk__in=[x.comp.parent_id for x in related])  # ID компетеций 2 уровня
+        leaf_nodes = Competence.objects.filter(parent_id__in=sub_parents_ids)  # Все-все компетенции для компетенций 2 уровня для этой проф.
+
+        ret = dict()
+        ret['related'] = related
+        ret['tree'] = Competence.objects.get_queryset_ancestors(sub_parents_ids, include_self=True)  # Получение дерева
+        ret['leaf_nodes'] = sorted(leaf_nodes, key=lambda x: x.pk not in leaf_nodes_only_prof)  # Сначала выводим попадающие под тек. проф.
+        ret['leaf_nodes_only_prof'] = leaf_nodes_only_prof
+
+        return ret
+
     @staticmethod
     def get_expected_courses(required_comps):
         qs = Course.objects.filter(competencies__comp_id__in=required_comps.keys()).prefetch_related('competencies').distinct()  # TODO: duplicate query
 
-        print qs.query
-
         return qs
+
+    def can_learn(self, user):
+        return not Plan.objects.filter(user=user).exists()
+
+    def learn(self, user, courses):
+        plan = Plan.objects.create(user=user, profession=self)
+        for course in courses:
+            Course2Plan.objects.create(plan=plan, course=course)
+
+            # print Course.objects.bulk_create(relations)
 
     def get_absolute_url(self):
         return reverse('plp_eduplanner:profession', args=(self.pk,))
@@ -141,3 +163,14 @@ class CourseComp(AbstractRateBasedRelation):
     class Meta:
         verbose_name = _('Компетенция курса')
         verbose_name_plural = _('Компетенции курсов')
+
+
+class Plan(models.Model):
+    user = models.ForeignKey(User)
+    profession = models.ForeignKey(Profession, related_name='plans')
+    courses = models.ManyToManyField(Course, through='Course2Plan')
+
+
+class Course2Plan(models.Model):
+    plan = models.ForeignKey(Plan)
+    course = models.ForeignKey(Course)
