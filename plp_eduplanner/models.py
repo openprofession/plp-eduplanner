@@ -1,5 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
+
+from itertools import groupby
+
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
@@ -105,6 +108,27 @@ class Profession(models.Model):
         ret['leaf_nodes_only_prof'] = leaf_nodes_only_prof
 
         return ret
+
+    def competencies_tree_for_user(self, user):
+        cd = self.competencies_tree()
+        prof_comps = {x.comp_id: x.rate for x in cd['related']}
+        user_comps = {x.comp_id: x.rate for x in user.competencies.all()[:100]}
+
+        cd['required'] = Competence.get_required_comps(prof_comps, user_comps)
+        cd['required_set'] = set(cd['required'].keys())
+
+        cd['percents'] = {}
+
+        for parent, irels in groupby(sorted(cd['related'], key=lambda x: x.comp.parent_id), key=lambda x: x.comp.parent_id):
+            rels = list(irels)
+            a = len(rels)
+            b = len([x for x in rels if x.comp_id not in cd['required_set']])
+            try:
+                p = (float(b) / a) * 100
+            except ZeroDivisionError:
+                p = 0
+            cd['percents'][parent] = p
+        return cd
 
     @staticmethod
     def get_expected_courses(required_comps):

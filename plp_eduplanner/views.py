@@ -1,6 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
 import time
+from itertools import groupby
+
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponseRedirect
@@ -30,13 +32,12 @@ class Dashboard(generic.TemplateView):
     def _select_profession(self):
         return [
             self._render_profile(profession=None),
-            render_to_string('profile/dashboard/header_profile.html', {'profession': None}),
             render_to_string('profile/dashboard/select_profession.html', dict(professions=models.Profession.objects.filter(is_public=True)[:5]))
         ]
 
     def _profession(self):
         plan = models.Plan.objects.filter(user=self.request.user).first()
-        cd = plan.profession.competencies_tree()
+        cd = plan.profession.competencies_tree_for_user(self.request.user)
         cd['profession'] = plan.profession
         return [
             self._render_profile(profession=plan.profession),
@@ -64,16 +65,11 @@ class AbstractProfessionPlan(generic.DetailView):
 
     def get(self, *args, **kwargs):
         self.object = self.get_object(self.queryset)
-        self.tree = self.object.competencies_tree()
-        prof_comps = {x.comp_id: x.rate for x in self.tree['related']}
-        user_comps = {x.comp_id: x.rate for x in self.request.user.competencies.all()[:100]}
+        self.tree = self.object.competencies_tree_for_user(self.request.user)
 
-        self.required = models.Competence.get_required_comps(prof_comps, user_comps)
-        self.required_set = set(self.required.keys())
+        expected_courses = sorted(models.Profession.get_expected_courses(self.tree['required']), key=lambda x: len(self.tree['required_set'] - set([x.comp_id for x in x.competencies.all()])), reverse=False)
 
-        expected_courses = sorted(models.Profession.get_expected_courses(self.required), key=lambda x: len(self.required_set - set([x.comp_id for x in x.competencies.all()])), reverse=False)
-
-        self.plan = models.Competence.get_plan(expected_courses, self.required.copy())
+        self.plan = models.Competence.get_plan(expected_courses, self.tree['required'].copy())
 
         return self.response()
 
