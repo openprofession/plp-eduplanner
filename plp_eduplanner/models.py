@@ -82,6 +82,7 @@ class Profession(models.Model):
 
     salary_min = models.PositiveIntegerField(default=None, blank=True, null=True)
     salary_max = models.PositiveIntegerField(default=None, blank=True, null=True)
+    salary_average = models.PositiveIntegerField(default=None, blank=True, null=True)
     vacancies_external_link = models.URLField(blank=True)
 
     require_educational_projects = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
@@ -89,6 +90,7 @@ class Profession(models.Model):
     companies_html = models.TextField(blank=True, verbose_name=_('HTML код блока компаний'))
     objectives_html = models.TextField(blank=True, verbose_name=_('HTML код блока задач'))
     directions_html = models.TextField(blank=True, verbose_name=_('HTML код блока направлений'))
+    academic_banner_html = models.TextField(blank=True, verbose_name=_('HTML код блока академического баннера'), help_text=_('Отображается в футере учебного плана на странице профессии'))
 
     def competencies_tree(self):
         related = self.competencies.all().select_related('comp__parent')[:100]  # Все компетенции последнего уровня для тек. проф

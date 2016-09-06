@@ -13,9 +13,10 @@
     {% endblock %}
     <hr/>
 
-    {{ salary_min }} - мин з.п
-    {{ salary_max }} - макс з.п
-    {{ vacancies_external_link }} ссылка Вакансии
+    {{ profession.salary_min }} - мин з.п
+    {{ profession.salary_max }} - макс з.п
+    {{ profession.salary_average }} - макс з.п
+    {{ profession.vacancies_external_link }} ссылка Вакансии
 
     Медиа в хедере
     {{ cover }}
@@ -45,7 +46,6 @@
                 {% recursetree tree %}
                     <li>
                         {{ node.title }}
-
                         {% if not node.is_leaf_node %}
                             <ul class="children">
                                 {{ children }}

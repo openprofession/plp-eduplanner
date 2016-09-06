@@ -40,27 +40,6 @@ class Dashboard(generic.TemplateView):
         ]
 
 
-class Profession(generic.DetailView):
-    """
-    Страница профессии
-    """
-    template_name = 'plp_eduplanner/profession.html'
-    queryset = models.Profession.objects.filter(is_public=True)
-    context_object_name = 'profession'
-
-    def get_context_data(self, **kwargs):
-        cd = super(Profession, self).get_context_data(**kwargs)
-        cd.update(self.object.competencies_tree())
-
-        # TODO подразумевается какая-либо логика?
-        cd['other_professions'] = models.Profession.objects.filter(~Q(pk=self.object.pk), is_public=True)[:2]
-
-        return cd
-
-    def learn(self, user):
-        pass
-
-
 class Professions(generic.ListView):
     """
     Актуально только для dev
@@ -77,8 +56,8 @@ class AbstractProfessionPlan(generic.DetailView):
 
     def get(self, *args, **kwargs):
         self.object = self.get_object(self.queryset)
-        cd = self.object.competencies_tree()
-        prof_comps = {x.comp_id: x.rate for x in cd['related']}
+        self.tree = self.object.competencies_tree()
+        prof_comps = {x.comp_id: x.rate for x in self.tree['related']}
         user_comps = {x.comp_id: x.rate for x in self.request.user.competencies.all()[:100]}
 
         self.required = models.Competence.get_required_comps(prof_comps, user_comps)
@@ -89,6 +68,27 @@ class AbstractProfessionPlan(generic.DetailView):
         self.plan = models.Competence.get_plan(expected_courses, self.required.copy())
 
         return self.response()
+
+
+class Profession(AbstractProfessionPlan):
+    """
+    Страница профессии
+    """
+    template_name = 'plp_eduplanner/profession.html'
+    queryset = models.Profession.objects.filter(is_public=True)
+    context_object_name = 'profession'
+
+    def get_context_data(self, **kwargs):
+        cd = super(Profession, self).get_context_data(**kwargs)
+        cd.update(self.tree)
+
+        # TODO подразумевается какая-либо логика?
+        cd['other_professions'] = models.Profession.objects.filter(~Q(pk=self.object.pk), is_public=True)[:2]
+        cd['plan'] = self.plan
+        return cd
+
+    def response(self):
+        return self.render_to_response(self.get_context_data())
 
 
 class ProfessionPlan(AbstractProfessionPlan):
@@ -128,7 +128,7 @@ class LearnProfession(AbstractProfessionPlan):
     def response(self):
         """
         Начать изучение профессии
-        :return:
+        :return: Redirect to  plp_eduplanner.Dashboard view
         """
         if self.object.can_learn(self.request.user):
             self.object.learn(self.request.user, [course for course, ttl in self.plan])
@@ -141,7 +141,7 @@ class ForgetPlan(generic.View):
     """
 
     def get(self, *args, **kwargs):
-        plan = models.Plan.objects.get(user=self.request.user, pk=self.kwargs['pk'])
+        plan = models.Plan.objects.get(user=self.request.user, pk=self.kwargs.get('pk'))
         plan.delete()
         return HttpResponseRedirect(reverse('plp_eduplanner:dashboard'))
 
