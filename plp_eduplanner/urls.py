@@ -10,5 +10,5 @@ urlpatterns = [
     url('^profession/(?P<pk>\d+)/plan/$', login_required(views.ProfessionPlan.as_view()), name='profession_plan'),
     url('^profession/(?P<pk>\d+)/learn/$', login_required(views.LearnProfession.as_view()), name='learn_profession'),
     url('^plan/(?P<pk>\d+)/forget/$', login_required(views.ForgetPlan.as_view()), name='forget_plan'),
-    url('^dashboard/$', views.Dashboard.as_view(), name='dashboard')
+    url('^dashboard/$', login_required(views.Dashboard.as_view()), name='dashboard')
 ]

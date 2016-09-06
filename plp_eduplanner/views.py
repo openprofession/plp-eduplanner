@@ -28,16 +28,24 @@ class Dashboard(generic.TemplateView):
         return cd
 
     def _select_profession(self):
-        return [render_to_string('profile/dashboard/select_profession.html', dict(professions=models.Profession.objects.filter(is_public=True)[:5]))]
+        return [
+            self._render_profile(profession=None),
+            render_to_string('profile/dashboard/header_profile.html', {'profession': None}),
+            render_to_string('profile/dashboard/select_profession.html', dict(professions=models.Profession.objects.filter(is_public=True)[:5]))
+        ]
 
     def _profession(self):
         plan = models.Plan.objects.filter(user=self.request.user).first()
         cd = plan.profession.competencies_tree()
         cd['profession'] = plan.profession
         return [
+            self._render_profile(profession=plan.profession),
+            render_to_string('profile/dashboard/plan.html', {'courses': plan.courses.all()[:100], 'plan': plan}),
             render_to_string('profile/dashboard/profession.html', cd),
-            render_to_string('profile/dashboard/plan.html', {'courses': plan.courses.all()[:100], 'plan': plan})
         ]
+
+    def _render_profile(self, profession=None):
+        return render_to_string('profile/dashboard/header_profile.html', {'profession': profession})
 
 
 class Professions(generic.ListView):
