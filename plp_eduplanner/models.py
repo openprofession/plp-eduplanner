@@ -4,7 +4,7 @@ from itertools import groupby
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
-from plp.models import User, Course
+from plp.models import User, Course, Participant
 from plp_eduplanner import validators
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext_lazy as _
@@ -17,7 +17,7 @@ class Competence(MPTTModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', verbose_name=_('Родитель'))
 
     @staticmethod
-    def get_plan(expected_courses, required_competencies):
+    def get_plan(expected_courses, required_competencies, user):
         plan = []
         for course in expected_courses:
             local_plan = [course, 0]
@@ -26,7 +26,24 @@ class Competence(MPTTModel):
                     local_plan[1] += 1
                     required_competencies[rel.comp_id] = 0
             plan.append(local_plan)
-        return filter(lambda x: x[1] > 0, plan)
+        courses = filter(lambda x: x[1] > 0, plan)
+
+        for course, weight in courses:
+            session = course.next_session
+            course.in_progress = False
+            course.is_graduate = False
+            if session:
+                print course, session
+                try:
+                    Participant.objects.filter(user=user).update(is_graduate=True)
+                    participant = Participant.objects.get(session=session, user=user)
+                except Participant.DoesNotExist:
+                    pass
+                else:
+                    course.in_progress = True
+                    course.is_graduate = participant.is_graduate
+                print course.is_graduate
+        return courses
 
     @staticmethod
     def get_required_comps(required_comps, source_comps):

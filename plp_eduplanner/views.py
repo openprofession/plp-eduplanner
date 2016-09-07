@@ -69,7 +69,7 @@ class AbstractProfessionPlan(generic.DetailView):
 
         expected_courses = sorted(models.Profession.get_expected_courses(self.tree['required']), key=lambda x: len(self.tree['required_set'] - set([x.comp_id for x in x.competencies.all()])), reverse=False)
 
-        self.plan = models.Competence.get_plan(expected_courses, self.tree['required'].copy())
+        self.plan = models.Competence.get_plan(expected_courses, self.tree['required'].copy(), self.request.user)
 
         return self.response()
 
