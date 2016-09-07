@@ -33,7 +33,6 @@ class Competence(MPTTModel):
             course.in_progress = False
             course.is_graduate = False
             if session:
-                print course, session
                 try:
                     Participant.objects.filter(user=user).update(is_graduate=True)
                     participant = Participant.objects.get(session=session, user=user)
@@ -42,7 +41,6 @@ class Competence(MPTTModel):
                 else:
                     course.in_progress = True
                     course.is_graduate = participant.is_graduate
-                print course.is_graduate
         return courses
 
     @staticmethod
@@ -94,6 +92,7 @@ class Profession(models.Model):
 
     cover = models.ImageField(upload_to='cover', blank=True, verbose_name=_(u'Обложка'))
     mini_cover = models.ImageField(upload_to='cover', blank=True, verbose_name=_(u'Обложка маленькая'))
+    vertical_cover = models.ImageField(upload_to='cover', blank=True, verbose_name=_(u'Вертикальная обложка'))
     chart = models.ImageField(upload_to='chart', blank=True, verbose_name=_(u'Изображение чарта'))
 
     cover_alt = models.CharField(max_length=255, default='', blank=True, verbose_name=_(u'alt к обложке'))
@@ -137,16 +136,17 @@ class Profession(models.Model):
         cd['required_set'] = set(cd['required'].keys())
 
         cd['percents'] = {}
-
+        cd['profession_progress'] = int((1 - float(len(cd['required_set'])) / len(prof_comps.keys())) * 100)
         for parent, irels in groupby(sorted(cd['related'], key=lambda x: x.comp.parent_id), key=lambda x: x.comp.parent_id):
             rels = list(irels)
             a = len(rels)
             b = len([x for x in rels if x.comp_id not in cd['required_set']])
             try:
-                p = (float(b) / a) * 100
+                p = int((float(b) / a) * 100)
             except ZeroDivisionError:
                 p = 0
             cd['percents'][parent] = p
+
         return cd
 
     @staticmethod

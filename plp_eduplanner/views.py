@@ -21,17 +21,17 @@ class Dashboard(generic.TemplateView):
 
     def get_context_data(self, **kwargs):
         cd = super(Dashboard, self).get_context_data(**kwargs)
+        self.context_data = cd
         html = []
         if not models.Plan.objects.filter(user=self.request.user).exists():
             html += self._select_profession()
         else:
             html += self._profession()
         cd['html'] = mark_safe(''.join(html))
-        return cd
+        return self.context_data
 
     def _select_profession(self):
         return [
-            self._render_profile(profession=None),
             render_to_string('profile/dashboard/select_profession.html', dict(professions=models.Profession.objects.filter(is_public=True)[:5]))
         ]
 
@@ -39,14 +39,11 @@ class Dashboard(generic.TemplateView):
         plan = models.Plan.objects.filter(user=self.request.user).first()
         cd = plan.profession.competencies_tree_for_user(self.request.user)
         cd['profession'] = plan.profession
+        self.context_data.update(cd)
         return [
-            self._render_profile(profession=plan.profession),
             render_to_string('profile/dashboard/plan.html', {'courses': plan.courses.all()[:100], 'plan': plan}),
             render_to_string('profile/dashboard/profession.html', cd),
         ]
-
-    def _render_profile(self, profession=None):
-        return render_to_string('profile/dashboard/header_profile.html', {'profession': profession})
 
 
 class Professions(generic.ListView):
