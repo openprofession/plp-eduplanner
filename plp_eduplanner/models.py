@@ -1,8 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
-
 from itertools import groupby
-
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
@@ -78,15 +76,19 @@ class Profession(models.Model):
     is_public = models.BooleanField(default=True, db_index=True, verbose_name=_('Публичный'))
 
     cover = models.ImageField(upload_to='cover', blank=True, verbose_name=_(u'Обложка'))
+    mini_cover = models.ImageField(upload_to='cover', blank=True, verbose_name=_(u'Обложка маленькая'))
+    chart = models.ImageField(upload_to='chart', blank=True, verbose_name=_(u'Изображение чарта'))
+
     cover_alt = models.CharField(max_length=255, default='', blank=True, verbose_name=_(u'alt к обложке'))
     video = models.CharField(max_length=500, blank=True, default='', verbose_name=_(u'Промовидео'), help_text=_(u'код видео'))
     video_cover = models.ImageField(upload_to='video_cover', blank=True, verbose_name=_(u'Картинка для видео'))
     video_cover_alt = models.CharField(max_length=255, blank=True, verbose_name=_(u'alt к картинке для видео'))
 
-    salary_min = models.PositiveIntegerField(default=None, blank=True, null=True)
-    salary_max = models.PositiveIntegerField(default=None, blank=True, null=True)
-    salary_average = models.PositiveIntegerField(default=None, blank=True, null=True)
-    vacancies_external_link = models.URLField(blank=True)
+    salary_min = models.PositiveIntegerField(default=None, blank=True, null=True, verbose_name=_('Мин. з/п'))
+    salary_max = models.PositiveIntegerField(default=None, blank=True, null=True, verbose_name=_('Макс. з/п'))
+    salary_average = models.PositiveIntegerField(default=None, blank=True, null=True, verbose_name=_('Средняя з/п'))
+    vacancies_external_link = models.URLField(blank=True, verbose_name=_('Ссылка на вакансии'))
+    vacancies_external_city_link = models.TextField(blank=True, verbose_name=_('HTML Код ссылки на вакансии в городе'))
 
     require_educational_projects = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
 

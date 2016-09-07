@@ -134,8 +134,14 @@ class LearnProfession(AbstractProfessionPlan):
         Начать изучение профессии
         :return: Redirect to  plp_eduplanner.Dashboard view
         """
-        if self.object.can_learn(self.request.user):
-            self.object.learn(self.request.user, [course for course, ttl in self.plan])
+        try:
+            exist = models.Plan.objects.get(user=self.request.user, pk=self.kwargs.get('pk'))
+            exist.delete()
+        except models.Plan.DoesNotExist:
+            pass
+
+        self.object.learn(self.request.user, [course for course, ttl in self.plan])
+
         return HttpResponseRedirect(reverse('plp_eduplanner:dashboard'))
 
 
