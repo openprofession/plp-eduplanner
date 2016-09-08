@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 import time
 from itertools import groupby
-
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponseRedirect
@@ -41,7 +40,7 @@ class Dashboard(generic.TemplateView):
         cd['profession'] = plan.profession
         self.context_data.update(cd)
         return [
-            render_to_string('profile/dashboard/plan.html', {'courses': plan.courses.all()[:100], 'plan': plan}),
+            render_to_string('profile/dashboard/plan.html', {'courses': plan.courses.all()[:100], 'plan': plan, 'profession_progress': cd['profession_progress']}),
             render_to_string('profile/dashboard/profession.html', cd),
         ]
 
