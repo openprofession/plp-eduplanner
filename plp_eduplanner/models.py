@@ -4,10 +4,14 @@ from itertools import groupby
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import post_delete, pre_delete
+from django.utils.functional import cached_property
+
 from plp.models import User, Course, Participant
 from plp_eduplanner import validators
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
 
 
 class Competence(MPTTModel):
@@ -15,6 +19,17 @@ class Competence(MPTTModel):
     annotation = models.CharField(max_length=200, blank=True, verbose_name=_('Аннотация'))
     is_public = models.BooleanField(default=True, db_index=True, verbose_name=_('Публичный'))
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', verbose_name=_('Родитель'))
+    total_leafs = models.PositiveIntegerField(default=0, editable=getattr(settings, 'DEBUG'))
+
+    def save(self, *args, **kwargs):
+        super(Competence, self).save(*args, **kwargs)
+        if self.level == 2:
+            self.parent.recount_leafs(commit=True)
+
+    def recount_leafs(self, commit=True):
+        self.total_leafs = self.get_descendant_count()
+        if commit:
+            self.save()
 
     @staticmethod
     def get_plan(expected_courses, required_competencies, user):
@@ -27,7 +42,6 @@ class Competence(MPTTModel):
                     required_competencies[rel.comp_id] = 0
             plan.append(local_plan)
         courses = filter(lambda x: x[1] > 0, plan)
-
         for course, weight in courses:
             session = course.next_session
             course.in_progress = False
@@ -215,7 +229,37 @@ class Plan(models.Model):
     profession = models.ForeignKey(Profession, related_name='plans')
     courses = models.ManyToManyField(Course, through='Course2Plan')
 
+    @cached_property
+    def courses_with_relations(self):
+        return Course2Plan.objects.filter(plan=self).select_related('course')
+
 
 class Course2Plan(models.Model):
     plan = models.ForeignKey(Plan)
     course = models.ForeignKey(Course)
+
+    @cached_property
+    def course_competencies_ratio(self):
+        table = {}
+        for rel in self.course.competencies.all().select_related('comp__parent'):
+            if rel.comp.parent_id not in table:
+                table[rel.comp.parent_id] = [0, rel.comp.parent]
+
+            table[rel.comp.parent_id][0] += 1
+        ret = []
+        for total_required, competence in table.values():
+            if total_required > 0 and competence.total_leafs > 0:
+                ret.append((100 - int(float(total_required) / competence.total_leafs * 100), competence))
+                # ret.append((total_required,competence.total_leafs, competence))
+            else:
+                ret.append(0, competence)
+        return ret
+
+
+def recount_leafs_signal_receiver(sender, instance, **kwargs):
+    # -1
+    if instance.level == 2:
+        instance.recount_leafs()
+
+
+pre_delete.connect(recount_leafs_signal_receiver, Competence)
