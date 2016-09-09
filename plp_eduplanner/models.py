@@ -163,7 +163,6 @@ class Profession(models.Model):
                 except ZeroDivisionError:
                     p = 0
                 cd['percents'][parent] = p
-
         return cd
 
     @staticmethod
