@@ -143,23 +143,25 @@ class Profession(models.Model):
 
     def competencies_tree_for_user(self, user):
         cd = self.competencies_tree()
-        prof_comps = {x.comp_id: x.rate for x in cd['related']}
-        user_comps = {x.comp_id: x.rate for x in user.competencies.all()[:100]}
 
-        cd['required'] = Competence.get_required_comps(prof_comps, user_comps)
-        cd['required_set'] = set(cd['required'].keys())
+        if cd:
+            prof_comps = {x.comp_id: x.rate for x in cd['related']}
+            user_comps = {x.comp_id: x.rate for x in user.competencies.all()[:100]}
+            
+            cd['required'] = Competence.get_required_comps(prof_comps, user_comps)
+            cd['required_set'] = set(cd['required'].keys())
 
-        cd['percents'] = {}
-        cd['profession_progress'] = int((1 - float(len(cd['required_set'])) / len(prof_comps.keys())) * 100)
-        for parent, irels in groupby(sorted(cd['related'], key=lambda x: x.comp.parent_id), key=lambda x: x.comp.parent_id):
-            rels = list(irels)
-            a = len(rels)
-            b = len([x for x in rels if x.comp_id not in cd['required_set']])
-            try:
-                p = int((float(b) / a) * 100)
-            except ZeroDivisionError:
-                p = 0
-            cd['percents'][parent] = p
+            cd['percents'] = {}
+            cd['profession_progress'] = int((1 - float(len(cd['required_set'])) / len(prof_comps.keys())) * 100)
+            for parent, irels in groupby(sorted(cd['related'], key=lambda x: x.comp.parent_id), key=lambda x: x.comp.parent_id):
+                rels = list(irels)
+                a = len(rels)
+                b = len([x for x in rels if x.comp_id not in cd['required_set']])
+                try:
+                    p = int((float(b) / a) * 100)
+                except ZeroDivisionError:
+                    p = 0
+                cd['percents'][parent] = p
 
         return cd
 
@@ -229,7 +231,6 @@ class Plan(models.Model):
     profession = models.ForeignKey(Profession, related_name='plans')
     courses = models.ManyToManyField(Course, through='Course2Plan')
 
-    @cached_property
     def courses_with_relations(self):
         return Course2Plan.objects.filter(plan=self).select_related('course')
 
@@ -238,7 +239,6 @@ class Course2Plan(models.Model):
     plan = models.ForeignKey(Plan)
     course = models.ForeignKey(Course)
 
-    @cached_property
     def course_competencies_ratio(self):
         table = {}
         for rel in self.course.competencies.all().select_related('comp__parent'):
@@ -249,10 +249,9 @@ class Course2Plan(models.Model):
         ret = []
         for total_required, competence in table.values():
             if total_required > 0 and competence.total_leafs > 0:
-                ret.append((100 - int(float(total_required) / competence.total_leafs * 100), competence))
-                # ret.append((total_required,competence.total_leafs, competence))
+                ret.append((int(float(total_required) / competence.total_leafs * 100), competence))
             else:
-                ret.append(0, competence)
+                ret.append((0, competence))
         return ret
 
 
