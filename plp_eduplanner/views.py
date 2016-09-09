@@ -86,7 +86,7 @@ class Dashboard(generic.TemplateView):
 
     def _select_profession(self):
         return [
-            render_to_string('profile/dashboard/select_profession.html', dict(professions=models.Profession.objects.filter(is_public=True)[:5]))
+            render_to_string('profile/dashboard/select_profession.html', dict(professions=models.Profession.objects.filter(is_public=True)))
         ]
 
     def _profession(self):
@@ -95,7 +95,7 @@ class Dashboard(generic.TemplateView):
         cd['profession'] = plan.profession
         self.context_data.update(cd)
         return [
-            render_to_string('profile/dashboard/plan.html', {'courses': plan.courses.all()[:100], 'plan': plan, 'profession_progress': cd['profession_progress']}),
+            render_to_string('profile/dashboard/plan.html', {'courses': plan.courses.all(), 'plan': plan, 'profession_progress': cd['profession_progress']}),
             render_to_string('profile/dashboard/profession.html', cd),
         ]
 

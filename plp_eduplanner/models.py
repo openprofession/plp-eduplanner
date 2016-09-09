@@ -145,7 +145,7 @@ class Profession(models.Model):
         cd = self.competencies_tree()
 
         prof_comps = {x.comp_id: x.rate for x in cd['related']}
-        user_comps = {x.comp_id: x.rate for x in user.competencies.all()[:100]}
+        user_comps = {x.comp_id: x.rate for x in user.competencies.all()}
             
         cd['required'] = Competence.get_required_comps(prof_comps, user_comps)
         cd['required_set'] = set(cd['required'].keys())
