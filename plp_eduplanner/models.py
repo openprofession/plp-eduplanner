@@ -144,14 +144,15 @@ class Profession(models.Model):
     def competencies_tree_for_user(self, user):
         cd = self.competencies_tree()
 
-        if cd:
-            prof_comps = {x.comp_id: x.rate for x in cd['related']}
-            user_comps = {x.comp_id: x.rate for x in user.competencies.all()[:100]}
+        prof_comps = {x.comp_id: x.rate for x in cd['related']}
+        user_comps = {x.comp_id: x.rate for x in user.competencies.all()[:100]}
             
-            cd['required'] = Competence.get_required_comps(prof_comps, user_comps)
-            cd['required_set'] = set(cd['required'].keys())
+        cd['required'] = Competence.get_required_comps(prof_comps, user_comps)
+        cd['required_set'] = set(cd['required'].keys())
 
-            cd['percents'] = {}
+        cd['percents'] = {}
+
+        if prof_comps.keys():
             cd['profession_progress'] = int((1 - float(len(cd['required_set'])) / len(prof_comps.keys())) * 100)
             for parent, irels in groupby(sorted(cd['related'], key=lambda x: x.comp.parent_id), key=lambda x: x.comp.parent_id):
                 rels = list(irels)
