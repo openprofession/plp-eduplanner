@@ -151,7 +151,8 @@ class Profession(models.Model):
         cd['required_set'] = set(cd['required'].keys())
 
         cd['percents'] = {}
-
+        cd['profession_progress'] = 0
+        
         if prof_comps.keys():
             cd['profession_progress'] = int((1 - float(len(cd['required_set'])) / len(prof_comps.keys())) * 100)
             for parent, irels in groupby(sorted(cd['related'], key=lambda x: x.comp.parent_id), key=lambda x: x.comp.parent_id):
