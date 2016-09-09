@@ -33,6 +33,11 @@ class Competence(MPTTModel):
 
     @staticmethod
     def get_plan(expected_courses, required_competencies, user):
+        """
+        weight ???
+        BBB : eto reiting po kakim to ne ponyatnim kriteriam,
+        kotorie v resultate daiut [...[course, NUMBER]]
+        """
         plan = []
         for course in expected_courses:
             local_plan = [course, 0]

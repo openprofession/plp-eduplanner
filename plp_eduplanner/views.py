@@ -95,7 +95,10 @@ class Dashboard(generic.TemplateView):
         cd['profession'] = plan.profession
         self.context_data.update(cd)
         return [
-            render_to_string('profile/dashboard/plan.html', {'courses': plan.courses.all(), 'plan': plan, 'profession_progress': cd['profession_progress']}),
+            render_to_string('plp_eduplanner/plan.html', {
+                    'courses': plan.courses.all(), 'plan_id': plan.pk, 
+                    'profession': cd['profession'],
+                    'profession_progress': cd['profession_progress']}),
             render_to_string('profile/dashboard/profession.html', cd),
         ]
 
@@ -118,9 +121,12 @@ class AbstractProfessionPlan(generic.DetailView):
         self.object = self.get_object(self.queryset)
         self.tree = self.object.competencies_tree_for_user(self.request.user)
 
-        expected_courses = sorted(models.Profession.get_expected_courses(self.tree['required']), key=lambda x: len(self.tree['required_set'] - set([x.comp_id for x in x.competencies.all()])), reverse=False)
+        expected_courses = sorted(
+            models.Profession.get_expected_courses(
+                self.tree['required']), key=lambda x: len(
+                    self.tree['required_set'] - set([x.comp_id for x in x.competencies.all()])), reverse=False)
 
-        self.plan = models.Competence.get_plan(expected_courses, self.tree['required'].copy(), self.request.user)
+        self.courses = [course for course, _ in models.Competence.get_plan(expected_courses, self.tree['required'].copy(), self.request.user)]
 
         return self.response()
 
@@ -137,9 +143,7 @@ class Profession(AbstractProfessionPlan):
         cd = super(Profession, self).get_context_data(**kwargs)
         cd.update(self.tree)
 
-        # TODO подразумевается какая-либо логика?
-        cd['other_professions'] = models.Profession.objects.filter(~Q(pk=self.object.pk), is_public=True)[:2]
-        cd['plan'] = self.plan
+        cd['courses'] = self.courses
         return cd
 
     def response(self):
