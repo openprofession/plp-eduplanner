@@ -231,7 +231,6 @@ class Plan(models.Model):
     profession = models.ForeignKey(Profession, related_name='plans')
     courses = models.ManyToManyField(Course, through='Course2Plan')
 
-    @cached_property
     def courses_with_relations(self):
         return Course2Plan.objects.filter(plan=self).select_related('course')
 
@@ -240,7 +239,6 @@ class Course2Plan(models.Model):
     plan = models.ForeignKey(Plan)
     course = models.ForeignKey(Course)
 
-    @cached_property
     def course_competencies_ratio(self):
         table = {}
         for rel in self.course.competencies.all().select_related('comp__parent'):
@@ -251,10 +249,9 @@ class Course2Plan(models.Model):
         ret = []
         for total_required, competence in table.values():
             if total_required > 0 and competence.total_leafs > 0:
-                ret.append((100 - int(float(total_required) / competence.total_leafs * 100), competence))
-                # ret.append((total_required,competence.total_leafs, competence))
+                ret.append((int(float(total_required) / competence.total_leafs * 100), competence))
             else:
-                ret.append(0, competence)
+                ret.append((0, competence))
         return ret
 
 
