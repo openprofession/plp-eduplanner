@@ -126,6 +126,7 @@ class AbstractProfessionPlan(generic.DetailView):
                 self.tree['required']), key=lambda x: len(
                     self.tree['required_set'] - set([x.comp_id for x in x.competencies.all()])), reverse=False)
 
+        # BBB
         self.courses = [course for course, _ in models.Competence.get_plan(expected_courses, self.tree['required'].copy(), self.request.user)]
 
         return self.response()
@@ -177,7 +178,7 @@ class ProfessionPlan(AbstractProfessionPlan):
         """
         return JsonResponse(
             {
-                'courses': {course.pk: self._course_response(course) for course, ttl in self.plan},
+                'courses': {course.pk: self._course_response(course) for course in self.courses},
                 'competencies': [(x, y) for x, y in self.required.items()]
             }
         )
@@ -195,7 +196,7 @@ class LearnProfession(AbstractProfessionPlan):
         except models.Plan.DoesNotExist:
             pass
 
-        self.object.learn(self.request.user, [course for course, ttl in self.plan])
+        self.object.learn(self.request.user, self.courses)
 
         return HttpResponseRedirect(reverse('plp_eduplanner:dashboard'))
 

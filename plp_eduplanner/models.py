@@ -47,12 +47,16 @@ class Competence(MPTTModel):
                     required_competencies[rel.comp_id] = 0
             plan.append(local_plan)
         courses = filter(lambda x: x[1] > 0, plan)
+
+
+        # BBB
         for course, weight in courses:
             session = course.next_session
             course.in_progress = False
             course.is_graduate = False
             if session:
                 try:
+                    # BBB 
                     Participant.objects.filter(user=user).update(is_graduate=True)
                     participant = Participant.objects.get(session=session, user=user)
                 except Participant.DoesNotExist:
@@ -150,7 +154,10 @@ class Profession(models.Model):
         cd = self.competencies_tree()
 
         prof_comps = {x.comp_id: x.rate for x in cd['related']}
-        user_comps = {x.comp_id: x.rate for x in user.competencies.all()}
+        
+        user_comps = {}
+        if not user.is_anonymous:
+            user_comps = {x.comp_id: x.rate for x in user.competencies.all()}
             
         cd['required'] = Competence.get_required_comps(prof_comps, user_comps)
         cd['required_set'] = set(cd['required'].keys())
