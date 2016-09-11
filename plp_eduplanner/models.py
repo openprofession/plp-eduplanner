@@ -50,20 +50,21 @@ class Competence(MPTTModel):
 
 
         # BBB
-        for course, weight in courses:
-            session = course.next_session
-            course.in_progress = False
-            course.is_graduate = False
-            if session:
-                try:
-                    # BBB 
-                    Participant.objects.filter(user=user).update(is_graduate=True)
-                    participant = Participant.objects.get(session=session, user=user)
-                except Participant.DoesNotExist:
-                    pass
-                else:
-                    course.in_progress = True
-                    course.is_graduate = participant.is_graduate
+        #for course, weight in courses:
+        #    session = course.next_session
+        #    course.in_progress = False
+        #    course.is_graduate = False
+        #    if session:
+        #        try:
+        #            # BBB 
+        #            Participant.objects.filter(user=user).update(is_graduate=True)
+        #            participant = Participant.objects.get(session=session, user=user)
+        #        except Participant.DoesNotExist:
+        #            pass
+        #        else:
+        #            course.in_progress = True
+        #            course.is_graduate = participant.is_graduate
+
         return courses
 
     @staticmethod
@@ -126,8 +127,13 @@ class Profession(models.Model):
     salary_min = models.PositiveIntegerField(default=None, blank=True, null=True, verbose_name=_('Мин. з/п'))
     salary_max = models.PositiveIntegerField(default=None, blank=True, null=True, verbose_name=_('Макс. з/п'))
     salary_average = models.PositiveIntegerField(default=None, blank=True, null=True, verbose_name=_('Средняя з/п'))
-    vacancies_external_link = models.URLField(blank=True, verbose_name=_('Ссылка на вакансии'))
-    vacancies_external_city_link = models.TextField(blank=True, verbose_name=_('HTML Код ссылки на вакансии в городе'))
+    vacancies_external_link = models.URLField(blank=True, verbose_name=_('Cсылка на вакансии'))
+    vacancies_external_city_link = models.TextField(
+        blank=True, verbose_name=_('HTML что нужно для освоения профессии'), 
+        help_text=_('''ALARM! если это поле заполненно то отображается только оно,
+а не данные из полей по заплатам. графику и ссылке на вакансии. 
+Укажите тут зарплаты, график, кусры, проекты, высшее образование и тп.''')
+        )
 
     require_educational_projects = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
 
