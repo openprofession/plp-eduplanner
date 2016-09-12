@@ -98,7 +98,7 @@ class Dashboard(generic.TemplateView):
             render_to_string('plp_eduplanner/plan.html', {
                     'courses': plan.courses.all(), 'plan_id': plan.pk, 
                     'profession': cd['profession'],
-                    'profession_progress': cd['profession_progress']}),
+                    'profession_progress': cd['profession_progress']}, request=self.request),
             render_to_string('profile/dashboard/profession.html', cd),
         ]
 
